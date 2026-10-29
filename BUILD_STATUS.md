@@ -10,7 +10,7 @@
 | F. Eyes (Omni) | Done | Dashboard encoding, observation parsing, feature flag and warning fallback pass offline tests. |
 | G. Reduce, verification loop, exports | Done | Streaming diagnosis, citation repair/abstention and safe dry-run markdown exports pass offline tests. |
 | H. Pipeline, API, SSE, replay, limits, upload | Done | Mock pipeline, JSONL replay, rate limits, source containment and upload bounds pass API tests. |
-| I. Frontend | Not started | UI is not present. |
+| I. Frontend | Done | Self-contained console controls and event-driven views are present; script syntax and served-page checks pass. |
 | J. Evaluation harness | Not started | Harness and report tools are not present. |
 | K. Container, deploy, replays | Not started | Container and replay assets are not present. |
 | L. Stretch | Not started | Stretch features are not present. |
