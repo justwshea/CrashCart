@@ -7,6 +7,7 @@ from datetime import datetime
 
 import httpx
 
+from app import events
 from app.events import EventRecorder, read_events, replay
 from app.limits import RunLimiter
 from app import main
@@ -25,6 +26,25 @@ def test_event_record_and_timed_replay(tmp_path):
     events = asyncio.run(scenario())
     assert [item["event"] for item in events] == ["run_started", "done"]
     assert read_events("run-1", tmp_path)[1]["data"] == {"ok": True}
+
+
+def test_built_in_sample_replay_is_discoverable_and_streamable(monkeypatch, tmp_path):
+    samples = tmp_path / "samples"
+    samples.mkdir()
+    (samples / "xid79_demo.jsonl").write_text(
+        json.dumps({"t": 0, "event": "run_started", "data": {"incident_id": "xid79_demo"}}) + "\n" +
+        json.dumps({"t": .01, "event": "done", "data": {"elapsed_s": .01}}) + "\n"
+    )
+    monkeypatch.setattr(events, "SAMPLES_DIR", samples)
+    monkeypatch.setattr(main, "SAMPLES_DIR", samples)
+
+    async def scenario():
+        transport = httpx.ASGITransport(app=main.app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            assert (await client.get("/api/replays")).json() == [{"id": "xid79_demo", "title": "xid79 demo"}]
+            response = await client.get("/api/replay/xid79_demo?speed=100")
+            assert "event: run_started" in response.text and "event: done" in response.text
+    asyncio.run(scenario())
 
 
 def test_run_limiter_enforces_ip_hour_and_daily_caps():

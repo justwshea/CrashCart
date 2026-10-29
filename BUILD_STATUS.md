@@ -12,7 +12,7 @@
 | H. Pipeline, API, SSE, replay, limits, upload | Done | Mock pipeline, JSONL replay, rate limits, source containment and upload bounds pass API tests. |
 | I. Frontend | Done | Self-contained console controls and event-driven views are present; script syntax and served-page checks pass. |
 | J. Evaluation harness | Partial | Mock harness and report acceptance pass; the live evaluation is a human gate. |
-| K. Container, deploy, replays | Not started | Container and replay assets are not present. |
+| K. Container, deploy, replays | Partial | Python 3.12 mock image builds and runs; replay recording and deployment are human gates. |
 | L. Stretch | Not started | Stretch features are not present. |
 | M. Documentation | Not started | Final documentation work remains. |
 | N. Submission | Not started | Human submission steps remain. |

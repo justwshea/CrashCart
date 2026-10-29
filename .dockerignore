@@ -1,0 +1,17 @@
+.git/
+.venv*/
+venv*/
+env*/
+virtualenv*/
+ENV/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.env.generated
+incidents/
+runs/
+gate0_report.json
+eval/results.json
+eval/RESULTS.md
+eval/chart.png

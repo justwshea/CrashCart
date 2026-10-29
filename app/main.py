@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.config import settings
-from app.events import EventRecorder, read_events, replay
+from app.events import SAMPLES_DIR, EventRecorder, read_events, replay
 from app.ingest import load_bundle
 from app.limits import limiter
 from app.pipeline import run as run_pipeline
@@ -154,6 +154,12 @@ async def replay_route(run_id: str, speed: float = Query(default=1.0, gt=0)):
         async for event in replay(run_id, speed):
             yield f"event: {event['event']}\ndata: {json.dumps(event['data'], ensure_ascii=False)}\n\n"
     return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.get("/api/replays")
+async def available_replays():
+    return [{"id": path.stem, "title": path.stem.replace("_", " ")}
+            for path in sorted(SAMPLES_DIR.glob("*.jsonl"))]
 
 
 @app.get("/api/report/{run_id}")

@@ -10,6 +10,9 @@ env*/
 virtualenv*/
 ENV/
 runs/
+!samples/runs/
+!samples/runs/*.jsonl
+!samples/runs/.gitkeep
 incidents/
 eval/results.json
 eval/RESULTS.md

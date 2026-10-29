@@ -14,6 +14,7 @@ from app.config import settings
 
 
 _RUN_ID = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
+SAMPLES_DIR = Path(__file__).resolve().parents[1] / "samples" / "runs"
 
 
 class EventRecorder:
@@ -45,7 +46,9 @@ def read_events(run_id: str, runs_dir: Optional[str | Path] = None) -> list[dict
         raise ValueError("invalid run id")
     path = Path(runs_dir or settings.runs_dir) / run_id / "events.jsonl"
     if not path.is_file():
-        return []
+        path = SAMPLES_DIR / f"{run_id}.jsonl"
+        if not path.is_file():
+            return []
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
