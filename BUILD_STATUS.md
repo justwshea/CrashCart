@@ -7,7 +7,7 @@
 | C. Synthetic incident generator | Done | Root evidence, deterministic generation, token budgets and dashboard sample timing pass acceptance. |
 | D. Ingest, stats, clustering, verifier | Done | Deterministic loading, chunking, silence findings, citation checks and clustering pass offline tests. |
 | E. Swarm | Done | Mock scanning, JSON retry, grounded filtering and tile events pass offline acceptance. |
-| F. Eyes (Omni) | Not started | Module and tests are not present. |
+| F. Eyes (Omni) | Done | Dashboard encoding, observation parsing, feature flag and warning fallback pass offline tests. |
 | G. Reduce, verification loop, exports | Not started | Modules and tests are not present. |
 | H. Pipeline, API, SSE, replay, limits, upload | Not started | Modules and tests are not present. |
 | I. Frontend | Not started | UI is not present. |

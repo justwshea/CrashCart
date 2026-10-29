@@ -159,7 +159,10 @@ def _mock_response(role: str, messages: list[dict]) -> dict:
                 break
         return {"findings": findings}
     if role == "eyes":
-        return {"observations": [], "summary": "Synthetic mock observation: dashboard inspected."}
+        return {"observations": [{"id": "O1", "claim": "GPU telemetry snapshot is available for comparison.",
+                                  "entity": None, "metric": "telemetry", "time_ref": "T_f + 120 s",
+                                  "severity": 1}],
+                "summary": "Mock mode reports a fixed synthetic dashboard observation."}
     if role == "reduce":
         result = {
             "verdict": "abstain",
