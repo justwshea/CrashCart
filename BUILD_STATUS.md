@@ -5,7 +5,7 @@
 | A. Scaffold and mock mode | Done | Mock mode, bounded LLM calls, retry and stream handling pass offline acceptance. |
 | B. Gate 0 smoke test | Partial | Script exists; the required live human gate has not run. |
 | C. Synthetic incident generator | Done | Root evidence, deterministic generation, token budgets and dashboard sample timing pass acceptance. |
-| D. Ingest, stats, clustering, verifier | Not started | Modules and tests are not present. |
+| D. Ingest, stats, clustering, verifier | Done | Deterministic loading, chunking, silence findings, citation checks and clustering pass offline tests. |
 | E. Swarm | Not started | Module and tests are not present. |
 | F. Eyes (Omni) | Not started | Module and tests are not present. |
 | G. Reduce, verification loop, exports | Not started | Modules and tests are not present. |
