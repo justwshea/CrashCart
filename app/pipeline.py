@@ -19,6 +19,7 @@ from app.swarm import run_swarm
 
 
 BASELINE_PROMPT = Path(__file__).parent / "prompts" / "tail_baseline.txt"
+SKEPTIC_PROMPT = Path(__file__).parent / "prompts" / "skeptic.txt"
 
 
 async def _emit(emit: Callable, name: str, payload: dict) -> None:
@@ -128,6 +129,14 @@ async def run(bundle: Bundle, options: Optional[dict], emit: Callable) -> dict:
         await _emit(emit, "clusters", {"n": len(clusters), "top": clusters[:12]})
         diagnosis = await diagnose(bundle, clusters, visual, emit, file_stats(bundle))
         result = diagnosis["result"]
+        skeptic_messages = [
+            {"role": "system", "content": SKEPTIC_PROMPT.read_text(encoding="utf-8")},
+            {"role": "user", "content": str({"diagnosis": result, "clusters": clusters[:20]})},
+        ]
+        skeptic, _ = await call("skeptic", skeptic_messages, temperature=0, max_tokens=400)
+        if not isinstance(skeptic, dict):
+            skeptic = {"disagree": False, "alternative": "No dissent was returned.", "check": "Review source evidence."}
+        await _emit(emit, "skeptic", skeptic)
         write_exports(options.get("run_dir", settings.runs_dir), result, diagnosis["narrative"])
         highlight_tiles = sorted({chunk.id for chunk in chunks
                                   if any(item.get("file") == chunk.file for item in result.get("evidence", []))})
@@ -148,7 +157,7 @@ async def run(bundle: Bundle, options: Optional[dict], emit: Callable) -> dict:
         await _emit(emit, "done", {"elapsed_s": elapsed, "cost_usd": cost, "truth_match": None})
         return {"run_id": run_id, "incident_id": incident_id, "baseline": baseline, "omni": visual,
                 "findings": findings, "clusters": clusters, "narrative": diagnosis["narrative"],
-                "result": result, "elapsed_s": elapsed, "cost_usd": cost, "tokens": usage_delta,
+                "result": result, "skeptic": skeptic, "elapsed_s": elapsed, "cost_usd": cost, "tokens": usage_delta,
                 "truth_match": None}
     except Exception as exc:
         await _emit(emit, "error", {"message": str(exc)})

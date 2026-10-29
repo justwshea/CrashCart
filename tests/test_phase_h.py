@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import datetime
 
 import httpx
+import pytest
 
 from app import events
 from app.events import EventRecorder, read_events, replay
@@ -99,7 +100,7 @@ def test_api_pipeline_sse_source_truth_and_reports(monkeypatch, tmp_path):
 
     events = asyncio.run(scenario())
     assert {item["event"] for item in events} >= {"run_started", "baseline", "tile", "metrics",
-        "clusters", "omni", "narrative_token", "verdict", "done"}
+        "clusters", "omni", "narrative_token", "verdict", "skeptic", "done"}
 
 
 def _zip_bytes(entries):
@@ -129,6 +130,23 @@ def test_upload_validates_paths_size_and_truth(monkeypatch, tmp_path):
     asyncio.run(scenario())
 
 
+def test_upload_rejects_zip_bomb_by_uncompressed_size(monkeypatch, tmp_path):
+    samples = tmp_path / "incidents"
+    samples.mkdir()
+    monkeypatch.setattr(main, "settings", replace(settings, incidents_dir=str(samples), runs_dir=str(tmp_path / "runs")))
+    monkeypatch.setattr(main, "MAX_UNCOMPRESSED_BYTES", 8)
+
+    async def scenario():
+        transport = httpx.ASGITransport(app=main.app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            bomb = _zip_bytes([("logs/scheduler.log", "x" * 9)])
+            response = await client.post("/api/upload", files={"file": ("bomb.zip", bomb, "application/zip")})
+            assert response.status_code == 413
+            assert "uncompressed size" in response.text
+
+    asyncio.run(scenario())
+
+
 def test_api_returns_429_with_replay_id(monkeypatch, tmp_path):
     samples = tmp_path / "incidents"
     make_incident("xid79_demo", samples, 7)
@@ -142,3 +160,22 @@ def test_api_returns_429_with_replay_id(monkeypatch, tmp_path):
             assert response.status_code == 429
             assert response.json() == {"error": "limit", "replay_run_id": "xid79_demo"}
     asyncio.run(scenario())
+
+
+def test_pipeline_emits_error_event_on_failure(monkeypatch, tmp_path):
+    from app import pipeline
+    from app.ingest import load_bundle
+
+    bundle = load_bundle(make_incident("xid79_demo", tmp_path, 7))
+    events_seen = []
+
+    async def fail_swarm(*args, **kwargs):
+        raise RuntimeError("controlled pipeline failure")
+
+    async def emit(event, payload):
+        events_seen.append(event)
+
+    monkeypatch.setattr(pipeline, "run_swarm", fail_swarm)
+    with pytest.raises(RuntimeError, match="controlled pipeline failure"):
+        asyncio.run(pipeline.run(bundle, {}, emit))
+    assert "error" in events_seen

@@ -1,0 +1,1 @@
+Give the strongest alternative explanation consistent with the evidence. Say whether you disagree with the diagnosis and identify the single check that would settle it. Do not change the diagnosis. Return JSON with disagree (boolean), alternative (string), and check (string).

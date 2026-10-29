@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 import httpx
 
@@ -19,3 +20,11 @@ def test_console_is_self_contained_and_has_required_operational_controls():
             assert "https://" not in html
             assert "fonts.googleapis" not in html
     asyncio.run(scenario())
+
+
+def test_console_registers_every_phase_h_event():
+    html = (Path(__file__).parents[1] / "app" / "static" / "index.html").read_text()
+    for event in ("run_started", "baseline", "tile", "metrics", "clusters", "omni",
+                  "narrative_token", "verdict", "skeptic", "done", "warning", "error"):
+        assert f'"{event}"' in html
+        assert f'case"{event}"' in html
