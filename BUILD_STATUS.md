@@ -8,7 +8,7 @@
 | D. Ingest, stats, clustering, verifier | Done | Deterministic loading, chunking, silence findings, citation checks and clustering pass offline tests. |
 | E. Swarm | Done | Mock scanning, JSON retry, grounded filtering and tile events pass offline acceptance. |
 | F. Eyes (Omni) | Done | Dashboard encoding, observation parsing, feature flag and warning fallback pass offline tests. |
-| G. Reduce, verification loop, exports | Not started | Modules and tests are not present. |
+| G. Reduce, verification loop, exports | Done | Streaming diagnosis, citation repair/abstention and safe dry-run markdown exports pass offline tests. |
 | H. Pipeline, API, SSE, replay, limits, upload | Not started | Modules and tests are not present. |
 | I. Frontend | Not started | UI is not present. |
 | J. Evaluation harness | Not started | Harness and report tools are not present. |

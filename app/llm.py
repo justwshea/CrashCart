@@ -164,6 +164,46 @@ def _mock_response(role: str, messages: list[dict]) -> dict:
                                   "severity": 1}],
                 "summary": "Mock mode reports a fixed synthetic dashboard observation."}
     if role == "reduce":
+        user_payload = {}
+        for message in messages:
+            if message.get("role") == "user":
+                try:
+                    user_payload = json.loads(message.get("content", "{}"))
+                except (TypeError, ValueError):
+                    user_payload = {}
+        clusters = user_payload.get("CLUSTERS", [])
+        xid = next((cluster for cluster in clusters
+                    if any("Xid" in str(example.get("quote", "")) and "79" in str(example.get("quote", ""))
+                           for example in cluster.get("exemplars", []))), None)
+        silence = next((cluster for cluster in clusters if cluster.get("kind") == "silence"
+                        and any("rank_013.log" in str(example.get("file", ""))
+                                for example in cluster.get("exemplars", []))), None)
+        if xid:
+            root_example = next(example for example in xid["exemplars"] if "Xid" in example["quote"] and "79" in example["quote"])
+            evidence = [{"id": "E1", "file": root_example["file"], "line_start": root_example["line_start"],
+                         "line_end": root_example["line_end"], "quote": root_example["quote"],
+                         "observation_id": None, "supports": "GPU 5 on node-01 suffered Xid 79."}]
+            ids = ["E1"]
+            if silence:
+                quiet_example = next(example for example in silence["exemplars"] if "rank_013.log" in example["file"])
+                evidence.append({"id": "E2", "file": quiet_example["file"], "line_start": quiet_example["line_start"],
+                                 "line_end": quiet_example["line_end"], "quote": quiet_example["quote"],
+                                 "observation_id": None, "supports": "Rank 13 stopped logging before peers timed out."})
+                ids.append("E2")
+            first_seen = xid.get("first_ts") or ""
+            result = {
+                "verdict": "diagnosis", "root_cause": {"summary": "GPU 5 on node-01 fell off the bus (Xid 79).",
+                    "category": "gpu_fell_off_bus", "node": "node-01", "gpu": 5, "rank": 13,
+                    "first_seen_ts": first_seen},
+                "confidence": 0.92,
+                "symptoms": ["Peer ranks timed out in NCCL collectives."],
+                "timeline": [{"ts": first_seen, "event": "Xid 79 reported on node-01 GPU 5.", "evidence_ids": ["E1"]}],
+                "evidence": evidence, "ruled_out": [],
+                "runbook": [{"step": 1, "command": "echo DRY RUN: inspect node-01 GPU 5", "purpose": "Review device diagnostics."}],
+                "missing_data": None,
+            }
+            return {"narrative": "The earliest localized hardware evidence is Xid 79 on node-01 GPU 5 [E1]. Rank 13 then stops logging while peers time out, consistent with a GPU bus failure [E2].",
+                    "result": result}
         result = {
             "verdict": "abstain",
             "root_cause": {"summary": "Mock mode found no grounded root cause.", "category": "other", "node": None, "gpu": None, "rank": None, "first_seen_ts": ""},
