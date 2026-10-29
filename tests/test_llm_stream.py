@@ -1,4 +1,5 @@
 import asyncio
+import time
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -104,6 +105,19 @@ def test_stream_strips_think_and_ignores_reasoning_content(monkeypatch):
     assert "".join(item.text for item in result) == "Answer  confirmed."
     assert result[-1].usage["estimated"] is True
     assert result[-1].usage["completion_tokens"] == len("Answer  confirmed.") // 4
+
+
+def test_shared_429_pause_is_waited_by_other_callers(monkeypatch):
+    llm._pause_until = time.monotonic() + 5
+    waited = []
+
+    async def fake_sleep(delay):
+        waited.append(delay)
+        llm._pause_until = 0
+
+    monkeypatch.setattr(llm.asyncio, "sleep", fake_sleep)
+    asyncio.run(llm._respect_pause())
+    assert waited and waited[0] > 0
 
 
 def test_malformed_json_stream_is_passed_through_for_caller_retry(monkeypatch):

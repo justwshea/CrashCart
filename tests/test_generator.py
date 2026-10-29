@@ -1,4 +1,5 @@
 import json
+import numpy as np
 from tools.make_dashboard import SAMPLE_SECONDS, telemetry
 
 from tools.make_incident import FAULTS, make_incident
@@ -49,6 +50,22 @@ def test_every_fault_has_real_evidence_and_expected_bundle_size(tmp_path):
         assert 700_000 <= estimated_tokens <= 900_000, (fault_id, estimated_tokens)
 
 
+def test_xid_watchdog_tail_follows_six_hundred_second_pattern(tmp_path):
+    bundle = make_incident("xid79_demo", tmp_path, 7)
+    truth = json.loads((bundle / "truth.json").read_text())
+    for rank in range(64):
+        lines = (bundle / "logs" / f"rank_{rank:03d}.log").read_text().splitlines()
+        watchdogs = [line for line in lines if "Watchdog caught collective operation timeout" in line]
+        if rank == truth["rank"]:
+            assert watchdogs == []
+            assert lines[-1].startswith("2026-10-01T12:53:10Z")
+            continue
+        assert len(watchdogs) == 1
+        assert watchdogs[0].startswith("2026-10-01T13:03:10Z")
+        assert "600000 milliseconds" in watchdogs[0]
+        assert sum("Traceback frame" in line for line in lines) == 25
+
+
 def test_dashboard_applies_faults_at_t_f_plus_120_seconds():
     times, util, clock, power, temp, sampled_util, sampled_clock, sampled_power = telemetry(
         "xid79_demo", 1, 5
@@ -68,3 +85,17 @@ def test_dashboard_applies_faults_at_t_f_plus_120_seconds():
     _, _, _, cap_power, cap_temp, _, _, cap_sample_power = telemetry("power_cap", 0, 1)
     assert cap_temp[0, 1] < 90
     assert cap_power[sample_index, 1] == cap_sample_power[0, 1] == 160
+
+
+def test_every_fault_changes_a_chart_series_and_heatmap_sample():
+    for fault_id in FAULTS:
+        node, gpu = (1, 5) if fault_id == "xid79_demo" else (3, 2)
+        actual = telemetry(fault_id, node, gpu)
+        baseline = telemetry("healthy", node, gpu)
+        _, util, clock, power, temp, sampled_util, sampled_clock, sampled_power = actual
+        _, base_util, base_clock, base_power, base_temp, base_sampled_util, base_sampled_clock, base_sampled_power = baseline
+        assert any(not np.array_equal(actual_values, base_values) for actual_values, base_values in (
+            (util, base_util), (clock, base_clock), (power, base_power))), fault_id
+        assert any(not np.array_equal(actual_values, base_values) for actual_values, base_values in (
+            (sampled_util, base_sampled_util), (sampled_clock, base_sampled_clock),
+            (sampled_power, base_sampled_power), (temp, base_temp))), fault_id

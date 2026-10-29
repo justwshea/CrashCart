@@ -1,5 +1,6 @@
 import asyncio
 import json
+from pathlib import Path
 
 from app.cluster import cluster_findings
 from app.export import render_exports, safe_runbook_steps
@@ -35,6 +36,28 @@ def test_mock_reduce_verifies_demo_diagnosis_and_streams_narrative(tmp_path):
     assert diagnosis["verification"] == {"verified": 2, "total": 2, "failed": 0}
     assert all(item["file"] != "truth.json" for item in diagnosis["evidence"])
     assert any(name == "narrative_token" for name, _ in events)
+
+
+def test_pipeline_never_reads_truth_json(monkeypatch, tmp_path):
+    from app.pipeline import run
+
+    bundle, clusters = demo_context(tmp_path)
+    original = Path.read_text
+
+    def reject_truth(path, *args, **kwargs):
+        if path.name == "truth.json":
+            raise AssertionError("pipeline attempted to read truth.json")
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", reject_truth)
+
+    async def scenario():
+        async def emit(*args):
+            return None
+        return await run(bundle, {"run_dir": tmp_path / "run"}, emit)
+
+    result = asyncio.run(scenario())
+    assert result["result"]["root_cause"]["rank"] == 13
 
 
 def test_corrupted_citation_is_retried_then_removed_and_forces_abstention(monkeypatch, tmp_path):
