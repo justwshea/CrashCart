@@ -89,6 +89,47 @@ def _retry_delay(exc: Exception, attempt: int) -> float:
     return delay
 
 
+def _retryable(exc: Exception) -> bool:
+    return getattr(exc, "status_code", None) in {429, 500, 502, 503, 504} or isinstance(
+        exc, (TimeoutError, ConnectionError, OSError)
+    ) or type(exc).__name__ in {"APIConnectionError", "APITimeoutError", "ConnectError", "ReadTimeout"}
+
+
+class _ThinkStripper:
+    """Filter think tags across arbitrary streaming chunk boundaries."""
+
+    def __init__(self) -> None:
+        self.buffer = ""
+        self.in_think = False
+
+    def feed(self, text: str, final: bool = False) -> str:
+        self.buffer += text
+        output = []
+        while self.buffer:
+            marker = "</think>" if self.in_think else "<think>"
+            index = self.buffer.lower().find(marker)
+            if index >= 0:
+                if not self.in_think:
+                    output.append(self.buffer[:index])
+                self.buffer = self.buffer[index + len(marker):]
+                self.in_think = not self.in_think
+                continue
+            if final:
+                if not self.in_think:
+                    output.append(self.buffer)
+                self.buffer = ""
+                break
+            hold = min(len(marker) - 1, len(self.buffer))
+            while hold > 0 and not self.buffer.lower().endswith(marker[:hold]):
+                hold -= 1
+            safe_end = len(self.buffer) - hold
+            if not self.in_think and safe_end:
+                output.append(self.buffer[:safe_end])
+            self.buffer = self.buffer[safe_end:]
+            break
+        return "".join(output)
+
+
 async def _set_pause(delay: float) -> None:
     global _pause_until
     async with _pause_lock:
@@ -163,12 +204,13 @@ async def call(role: str, messages: list[dict], **kw: Any) -> tuple[Any, float]:
                 return response, elapsed
             except Exception as exc:
                 status = getattr(exc, "status_code", None)
-                if status not in {429, 500, 502, 503, 504} or attempt == 5:
+                if not _retryable(exc) or attempt == 5:
                     raise
                 delay = _retry_delay(exc, attempt)
                 if status == 429:
                     await _set_pause(delay)
-                await asyncio.sleep(delay)
+                else:
+                    await asyncio.sleep(delay)
         raise RuntimeError("unreachable retry state")
 
 
@@ -184,6 +226,10 @@ async def call_stream(role: str, messages: list[dict], **kw: Any) -> AsyncIterat
             yield StreamDelta(text=text[i:i + 48])
         yield StreamDelta(usage={"estimated": True})
         return
+    if role not in settings.models:
+        raise ValueError(f"unknown LLM role: {role}")
+    if not settings.api_key:
+        raise RuntimeError("Set LLM_API_KEY or NEBIUS_API_KEY when LLM_MODE=live")
     client = _client_for_live()
     request = {"model": settings.models[role], "messages": messages, "stream": True,
                "stream_options": {"include_usage": True}, **kw}
@@ -193,17 +239,49 @@ async def call_stream(role: str, messages: list[dict], **kw: Any) -> AsyncIterat
     async with _semaphore:
         start = time.perf_counter()
         prompt_tokens = _estimate_messages(messages)
-        completion_chars = 0
-        stream = await client.chat.completions.create(**request)
-        async for chunk in stream:
-            usage = getattr(chunk, "usage", None)
-            choices = getattr(chunk, "choices", []) or []
-            for choice in choices:
-                delta = getattr(choice, "delta", None)
-                content = getattr(delta, "content", None) if delta else None
-                if content:
-                    completion_chars += len(content)
-                    yield StreamDelta(text=content)
-            if usage is not None:
-                yield StreamDelta(usage=usage)
-        metrics.record(role, prompt_tokens, completion_chars // 4, time.perf_counter() - start)
+        for attempt in range(6):
+            await _respect_pause()
+            completion_chars = 0
+            actual_usage = None
+            emitted_text = False
+            stripper = _ThinkStripper()
+            try:
+                stream = await client.chat.completions.create(**request)
+                async for chunk in stream:
+                    usage = getattr(chunk, "usage", None)
+                    if usage is not None:
+                        actual_usage = usage
+                    for choice in getattr(chunk, "choices", []) or []:
+                        delta = getattr(choice, "delta", None)
+                        content = getattr(delta, "content", None) if delta else None
+                        # reasoning_content is intentionally ignored.
+                        if content:
+                            clean = stripper.feed(content)
+                            if clean:
+                                emitted_text = True
+                                completion_chars += len(clean)
+                                yield StreamDelta(text=clean)
+                tail = stripper.feed("", final=True)
+                if tail:
+                    emitted_text = True
+                    completion_chars += len(tail)
+                    yield StreamDelta(text=tail)
+                if actual_usage is None:
+                    prompt_tokens_out = prompt_tokens
+                    completion_tokens_out = completion_chars // 4
+                    final_usage = {"prompt_tokens": prompt_tokens_out,
+                                   "completion_tokens": completion_tokens_out, "estimated": True}
+                else:
+                    prompt_tokens_out, completion_tokens_out = _usage(actual_usage, prompt_tokens, completion_chars // 4)
+                    final_usage = actual_usage
+                metrics.record(role, prompt_tokens_out, completion_tokens_out, time.perf_counter() - start)
+                yield StreamDelta(usage=final_usage)
+                return
+            except Exception as exc:
+                if not _retryable(exc) or attempt == 5 or emitted_text:
+                    raise
+                delay = _retry_delay(exc, attempt)
+                if getattr(exc, "status_code", None) == 429:
+                    await _set_pause(delay)
+                else:
+                    await asyncio.sleep(delay)

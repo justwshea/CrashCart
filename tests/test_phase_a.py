@@ -40,3 +40,12 @@ def test_client_uses_configured_base_url_and_key(monkeypatch):
         "base_url": "https://provider.example/v1/",
     }
 
+
+def test_concurrency_environment_is_clamped_to_one(monkeypatch):
+    from app.config import _concurrency_env
+
+    monkeypatch.setenv("CONCURRENCY", "-4")
+    assert _concurrency_env() == 1
+    monkeypatch.setenv("CONCURRENCY", "0")
+    assert _concurrency_env() == 1
+

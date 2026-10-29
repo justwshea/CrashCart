@@ -21,12 +21,16 @@ def _float_env(name: str, default: float) -> float:
         return default
 
 
+def _concurrency_env() -> int:
+    return max(1, _int_env("CONCURRENCY", 24))
+
+
 @dataclass(frozen=True)
 class Settings:
     api_key: str = os.getenv("LLM_API_KEY") or os.getenv("NEBIUS_API_KEY", "")
     base_url: str = os.getenv("LLM_BASE_URL", "https://api.tokenfactory.nebius.com/v1/")
     mode: str = os.getenv("LLM_MODE", "live").lower()
-    concurrency: int = _int_env("CONCURRENCY", 24)
+    concurrency: int = _concurrency_env()
     daily_run_cap: int = _int_env("DAILY_RUN_CAP", 60)
     ip_runs_per_hour: int = _int_env("IP_RUNS_PER_HOUR", 3)
     runs_dir: str = os.getenv("RUNS_DIR", "./runs")
