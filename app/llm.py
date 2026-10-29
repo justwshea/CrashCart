@@ -163,6 +163,10 @@ def _mock_response(role: str, messages: list[dict]) -> dict:
                                   "entity": None, "metric": "telemetry", "time_ref": "T_f + 120 s",
                                   "severity": 1}],
                 "summary": "Mock mode reports a fixed synthetic dashboard observation."}
+    if role == "baseline":
+        return {"category": "other", "node": None, "gpu": None,
+                "explanation": "The tail shows collective timeout symptoms but no root-cause evidence.",
+                "next_steps": ["Inspect earlier rank and kernel logs."]}
     if role == "reduce":
         user_payload = {}
         for message in messages:
