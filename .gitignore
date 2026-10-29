@@ -18,3 +18,8 @@ eval/results.json
 eval/RESULTS.md
 eval/chart.png
 gate0_report.json
+
+# Generated Python environments and bytecode anywhere in the repository
+**/.venv*/
+**/venv/
+**/__pycache__/
