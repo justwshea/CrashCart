@@ -25,12 +25,21 @@ def _concurrency_env() -> int:
     return max(1, _int_env("CONCURRENCY", 24))
 
 
+def _bool_env(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 @dataclass(frozen=True)
 class Settings:
     api_key: str = os.getenv("LLM_API_KEY") or os.getenv("NEBIUS_API_KEY", "")
     base_url: str = os.getenv("LLM_BASE_URL", "https://api.tokenfactory.nebius.com/v1/")
     mode: str = os.getenv("LLM_MODE", "live").lower()
     concurrency: int = _concurrency_env()
+    json_mode: bool = _bool_env("LLM_JSON_MODE", False)
+    use_eyes: bool = _bool_env("USE_EYES", True)
     daily_run_cap: int = _int_env("DAILY_RUN_CAP", 60)
     ip_runs_per_hour: int = _int_env("IP_RUNS_PER_HOUR", 3)
     runs_dir: str = os.getenv("RUNS_DIR", "./runs")

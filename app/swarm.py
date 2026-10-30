@@ -81,7 +81,10 @@ async def scan(chunk: Chunk, emit: Callable, bundle: Optional[Bundle] = None) ->
     output_tokens = 0
     try:
         for attempt in range(2):
-            response, _ = await call("swarm", messages, temperature=0, max_tokens=700)
+            request_options = {"temperature": 0, "max_tokens": 700}
+            if settings.json_mode:
+                request_options["response_format"] = {"type": "json_object"}
+            response, _ = await call("swarm", messages, **request_options)
             output_tokens += len(_response_text(response)) // 4
             parsed = _parse_findings(response)
             if parsed is not None:

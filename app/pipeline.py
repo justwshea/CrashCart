@@ -114,7 +114,7 @@ async def run(bundle: Bundle, options: Optional[dict], emit: Callable) -> dict:
         return response
 
     async def eyes_task():
-        visual = await read_dashboard(bundle, emit, enabled=options.get("use_eyes", True))
+        visual = await read_dashboard(bundle, emit, enabled=options.get("use_eyes", settings.use_eyes))
         await _emit(emit, "omni", visual)
         return visual
 

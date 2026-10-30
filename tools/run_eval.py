@@ -74,7 +74,7 @@ async def _evaluate(system, incident_id, bundle, truth, out_dir):
     else:
         options = {"incident_id": incident_id, "run_id": f"eval-{system}-{incident_id}",
                    "run_dir": out_dir / "runs" / f"{system}-{incident_id}",
-                   "use_eyes": system != "no_eyes"}
+                   "use_eyes": settings.use_eyes and system != "no_eyes"}
         report = await run_pipeline(bundle, options, _quiet_emit)
         result = report.get("result", {})
     elapsed = time.perf_counter() - started

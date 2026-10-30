@@ -10,6 +10,7 @@ import shutil
 import uuid
 import zipfile
 from pathlib import Path, PurePosixPath
+from typing import Optional
 
 from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
@@ -35,7 +36,7 @@ ALLOWED_EXTENSIONS = {".log", ".txt", ".yaml", ".yml", ".png"}
 class RunRequest(BaseModel):
     incident_id: str = Field(min_length=1, max_length=80)
     swarm_concurrency: int = Field(default=24, ge=1, le=48)
-    use_eyes: bool = True
+    use_eyes: Optional[bool] = None
 
 
 def _incident_root(incident_id: str) -> Path:
@@ -101,7 +102,8 @@ async def start_run(body: RunRequest, request: Request):
         return JSONResponse(status_code=429, content={"error": "limit", "replay_run_id": replay_id})
     run_id = uuid.uuid4().hex
     _reports.pop(run_id, None)
-    options = {"swarm_concurrency": body.swarm_concurrency, "use_eyes": body.use_eyes}
+    options = {"swarm_concurrency": body.swarm_concurrency,
+               "use_eyes": settings.use_eyes and body.use_eyes is not False}
     _tasks[run_id] = asyncio.create_task(_run_background(run_id, body.incident_id, root, options))
     return {"run_id": run_id}
 
