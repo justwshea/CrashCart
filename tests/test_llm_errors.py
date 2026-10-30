@@ -58,3 +58,18 @@ def test_rate_limit_after_all_retries_has_friendly_message(monkeypatch):
     with pytest.raises(RuntimeError, match="rate limit persisted after retries"):
         asyncio.run(llm.call("reduce", [{"role": "user", "content": "test"}]))
     assert len(calls) == 6
+
+
+def test_unrelated_exception_keeps_its_original_message(monkeypatch):
+    live(monkeypatch)
+    failure = RuntimeError("controlled pipeline failure")
+
+    class Completions:
+        async def create(self, **kwargs):
+            raise failure
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=Completions()))
+    monkeypatch.setattr(llm, "_client_for_live", lambda: client)
+    with pytest.raises(RuntimeError, match="controlled pipeline failure") as captured:
+        asyncio.run(llm.call("reduce", [{"role": "user", "content": "test"}]))
+    assert captured.value is failure
