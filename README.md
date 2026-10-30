@@ -2,6 +2,16 @@
 
 CrashCart helps explain failures in multi-node GPU training jobs by scanning rank and kernel logs, reading a synthetic telemetry dashboard, grouping repeated symptoms, and checking every quoted citation against its source before it produces a diagnosis, postmortem, and dry-run runbook. The sample incidents are synthetic and the app is designed to run offline in mock mode.
 
+## Quick start
+
+```sh
+git clone <repo-url> crashcart && cd crashcart
+./run.sh
+# Paste your Token Factory API key at the hidden prompt.
+```
+
+The launcher creates the environment, installs dependencies, generates sample incidents, runs Gate 0 when needed, and starts the app. Use `./run.sh mock` to start without a key. The manual setup instructions remain below.
+
 ## Demo
 
 Demo: [add demo URL](DEMO_URL_PLACEHOLDER)<br>
