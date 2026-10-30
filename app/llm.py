@@ -48,6 +48,20 @@ _pause_until = 0.0
 _client = None
 
 
+def _friendly_failure(exc: Exception) -> str | None:
+    status = getattr(exc, "status_code", None)
+    detail = str(exc).lower()
+    if status == 401:
+        return "Token Factory rejected the API key (401). Check the key in .env and paste a valid key, then restart."
+    if status == 402 or any(term in detail for term in (
+        "quota exceeded", "insufficient credit", "no credits", "credit balance", "billing limit",
+    )):
+        return "Token Factory reports no credits or an exhausted quota. Add credits or raise the quota, then retry."
+    if status == 429:
+        return "Token Factory rate limit persisted after retries. Wait and retry, or lower CONCURRENCY in .env."
+    return None
+
+
 def _client_for_live():
     global _client
     if _client is None:
@@ -235,7 +249,7 @@ async def call(role: str, messages: list[dict], **kw: Any) -> tuple[Any, float]:
             metrics.record(role, prompt_tokens, completion_tokens, elapsed)
             return response, elapsed
         if not settings.api_key:
-            raise RuntimeError("Set LLM_API_KEY or NEBIUS_API_KEY when LLM_MODE=live")
+            raise RuntimeError("Missing Token Factory API key. Paste it into .env as LLM_API_KEY or NEBIUS_API_KEY, then restart.")
         client = _client_for_live()
         request = {"model": settings.models[role], "messages": messages, **kw}
         extra = settings.extra_body(role)
@@ -251,7 +265,14 @@ async def call(role: str, messages: list[dict], **kw: Any) -> tuple[Any, float]:
                 return response, elapsed
             except Exception as exc:
                 status = getattr(exc, "status_code", None)
-                if not _retryable(exc) or attempt == 5:
+                friendly = _friendly_failure(exc)
+                if friendly and status != 429:
+                    raise RuntimeError(friendly) from None
+                if not _retryable(exc):
+                    raise
+                if attempt == 5:
+                    if friendly:
+                        raise RuntimeError(friendly) from None
                     raise
                 delay = _retry_delay(exc, attempt)
                 if status == 429:
@@ -276,7 +297,7 @@ async def call_stream(role: str, messages: list[dict], **kw: Any) -> AsyncIterat
     if role not in settings.models:
         raise ValueError(f"unknown LLM role: {role}")
     if not settings.api_key:
-        raise RuntimeError("Set LLM_API_KEY or NEBIUS_API_KEY when LLM_MODE=live")
+        raise RuntimeError("Missing Token Factory API key. Paste it into .env as LLM_API_KEY or NEBIUS_API_KEY, then restart.")
     client = _client_for_live()
     request = {"model": settings.models[role], "messages": messages, "stream": True,
                "stream_options": {"include_usage": True}, **kw}
@@ -325,7 +346,15 @@ async def call_stream(role: str, messages: list[dict], **kw: Any) -> AsyncIterat
                 yield StreamDelta(usage=final_usage)
                 return
             except Exception as exc:
-                if not _retryable(exc) or attempt == 5 or emitted_text:
+                status = getattr(exc, "status_code", None)
+                friendly = _friendly_failure(exc)
+                if friendly and status != 429:
+                    raise RuntimeError(friendly) from None
+                if not _retryable(exc) or emitted_text:
+                    raise
+                if attempt == 5:
+                    if friendly:
+                        raise RuntimeError(friendly) from None
                     raise
                 delay = _retry_delay(exc, attempt)
                 if getattr(exc, "status_code", None) == 429:
