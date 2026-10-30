@@ -1,0 +1,7 @@
+beat_id,start,end,duration_s,screen_clip_filename,voiceover_filename,caption_text,notes,measured_duration_s
+B1,0:00,0:15,15,B1.webm,B1.txt,"Synthetic incident · Live run · Tail answer: raise the timeout · Root cause: node-01 GPU 5 · Verified","Real live hero shot; show real stopwatch; do not use replay",
+B2,0:15,0:35,20,B2.webm,B2.txt,"Synthetic incident · Loud symptom / quiet cause","Rank log tail beside kernel Xid source line",
+B3,0:35,1:05,30,B3.webm,B3.txt,"Parallel calls · Swarm · Dashboard reader · Final reasoning · Estimated cost","Use configured model names and actual live HUD; do not invent HUD values",
+B4,1:05,1:35,30,B4.webm,B4.txt,"Measured evaluation · [MEASURE]","Use eval/chart.png and eval/RESULTS.md only when generated; otherwise slate: not yet measured",
+B5,1:35,1:55,20,B5.webm,B5.txt,"Verified source · Dry-run only · Upload a bundle","Evidence drawer, runbook, postmortem download, upload control",
+B6,1:55,2:20,25,B6.webm,B6.txt,"Token Factory + Nemotron · Repo: [REPO_URL] · Demo: [DEMO_URL]","No hosting claim unless public deployment is verified",

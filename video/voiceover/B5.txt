@@ -1,0 +1,1 @@
+Select an evidence chip to open its source line. The app checks each citation against the file. The runbook is a dry run for a person to review. Download the postmortem, or upload a bundle of your own.

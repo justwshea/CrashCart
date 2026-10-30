@@ -1,0 +1,19 @@
+Target duration: 2 minutes 20 seconds, including pauses. Sentence spacing assumes a 0.4 second pause.
+
+=== B1 · target 15 seconds ===
+This is a synthetic incident, running live. The tail suggests raising the timeout. That answer is wrong. The evidence points to node one, GPU five. The citation is verified.
+
+=== B2 · target 20 seconds ===
+The loud symptom is a collective timeout. A collective is work shared across the training ranks. Here is the quiet cause: a kernel log records an Xid, a GPU error, before the timeout. The source line lets us check the claim.
+
+=== B3 · target 30 seconds ===
+CrashCart scans log chunks with parallel workers. Parallel means calls run at the same time. Its optional dashboard reader checks synthetic telemetry; its provider model ID needs live verification. Final reasoning combines findings and verifies cited lines. The configured swarm and final models are Nemotron Lightning and Nemotron Ultra. The display shows tokens per second and the app's estimated run cost.
+
+=== B4 · target 30 seconds ===
+We compare CrashCart with a tail-only baseline. This chart and table come from the evaluation results file, not a hand-entered estimate. The dashboard-only incidents test whether visual evidence changes the diagnosis. The reader comparison appears only if the evaluation measured it. No performance figure is available yet. [MEASURE] Until results exist, this screen says not yet measured.
+
+=== B5 · target 20 seconds ===
+Select an evidence chip to open its source line. The app checks each citation against the file. The runbook is a dry run for a person to review. Download the postmortem, or upload a bundle of your own.
+
+=== B6 · target 25 seconds ===
+CrashCart helps training teams investigate synthetic multi-node GPU failures. It uses Nebius Token Factory with configured Nemotron models. The demo runs locally. Public deployment is not verified, so we make no hosting claim. Find the project here, and try the demo here. Links are in the description.

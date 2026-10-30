@@ -1,0 +1,1 @@
+The loud symptom is a collective timeout. A collective is work shared across the training ranks. Here is the quiet cause: a kernel log records an Xid, a GPU error, before the timeout. The source line lets us check the claim.

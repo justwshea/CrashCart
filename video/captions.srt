@@ -1,0 +1,116 @@
+1
+00:00:00,000 --> 00:00:05,000
+This is a synthetic incident, running
+live. The tail suggests raising the
+
+2
+00:00:05,000 --> 00:00:10,000
+timeout. That answer is wrong. The
+evidence points to node one, GPU five. The
+
+3
+00:00:10,000 --> 00:00:15,000
+citation is verified.
+
+4
+00:00:15,000 --> 00:00:21,667
+The loud symptom is a collective timeout.
+A collective is work shared across the
+
+5
+00:00:21,667 --> 00:00:28,333
+training ranks. Here is the quiet cause: a
+kernel log records an Xid, a GPU error,
+
+6
+00:00:28,333 --> 00:00:35,000
+before the timeout. The source line lets
+us check the claim.
+
+7
+00:00:35,000 --> 00:00:40,000
+CrashCart scans log chunks with parallel
+workers. Parallel means calls run at the
+
+8
+00:00:40,000 --> 00:00:45,000
+same time. Its optional dashboard reader
+checks synthetic telemetry; its provider
+
+9
+00:00:45,000 --> 00:00:50,000
+model ID needs live verification. Final
+reasoning combines findings and verifies
+
+10
+00:00:50,000 --> 00:00:55,000
+cited lines. The configured swarm and
+final models are Nemotron Lightning and
+
+11
+00:00:55,000 --> 00:01:00,000
+Nemotron Ultra. The display shows tokens
+per second and the app's estimated run
+
+12
+00:01:00,000 --> 00:01:05,000
+cost.
+
+13
+00:01:05,000 --> 00:01:11,000
+We compare CrashCart with a tail-only
+baseline. This chart and table come from
+
+14
+00:01:11,000 --> 00:01:17,000
+the evaluation results file, not a
+hand-entered estimate. The dashboard-only
+
+15
+00:01:17,000 --> 00:01:23,000
+incidents test whether visual evidence
+changes the diagnosis. The reader
+
+16
+00:01:23,000 --> 00:01:29,000
+comparison appears only if the evaluation
+measured it. No performance figure is
+
+17
+00:01:29,000 --> 00:01:35,000
+available yet. [MEASURE] Until results
+exist, this screen says not yet measured.
+
+18
+00:01:35,000 --> 00:01:41,667
+Select an evidence chip to open its source
+line. The app checks each citation against
+
+19
+00:01:41,667 --> 00:01:48,333
+the file. The runbook is a dry run for a
+person to review. Download the postmortem,
+
+20
+00:01:48,333 --> 00:01:55,000
+or upload a bundle of your own.
+
+21
+00:01:55,000 --> 00:02:01,250
+CrashCart helps training teams investigate
+synthetic multi-node GPU failures. It uses
+
+22
+00:02:01,250 --> 00:02:07,500
+Nebius Token Factory with configured
+Nemotron models. The demo runs locally.
+
+23
+00:02:07,500 --> 00:02:13,750
+Public deployment is not verified, so we
+make no hosting claim. Find the project
+
+24
+00:02:13,750 --> 00:02:20,000
+here, and try the demo here. Links are in
+the description.

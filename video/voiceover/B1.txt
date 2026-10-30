@@ -1,0 +1,1 @@
+This is a synthetic incident, running live. The tail suggests raising the timeout. That answer is wrong. The evidence points to node one, GPU five. The citation is verified.

@@ -1,0 +1,1 @@
+CrashCart helps training teams investigate synthetic multi-node GPU failures. It uses Nebius Token Factory with configured Nemotron models. The demo runs locally. Public deployment is not verified, so we make no hosting claim. Find the project here, and try the demo here. Links are in the description.
