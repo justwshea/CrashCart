@@ -13,4 +13,4 @@ ENV INCIDENTS_DIR=/srv/incidents \
     LLM_MODE=mock
 
 EXPOSE 8080
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]

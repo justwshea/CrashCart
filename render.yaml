@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: crashcart-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: LLM_MODE
+        value: mock
+      - key: PORT
+        value: "10000"

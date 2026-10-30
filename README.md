@@ -5,7 +5,7 @@ CrashCart helps explain failures in multi-node GPU training jobs by scanning ran
 ## Quick start
 
 ```sh
-git clone <repo-url> crashcart && cd crashcart
+git clone https://github.com/justwshea/CrashCart.git crashcart && cd crashcart
 ./run.sh
 # Paste your Token Factory API key at the hidden prompt.
 ```
@@ -97,6 +97,14 @@ docker run --rm -p 8080:8080 crashcart:mock
 ```
 
 The offline build was attempted, but dependency installation could not complete without network access.
+
+## Hosted demo (mock mode)
+
+The repository includes a Render Blueprint in `render.yaml` for a public demo. It sets `LLM_MODE=mock`, so visitors can run the synthetic incidents without a Token Factory key and without making model API calls. The console labels the run button `Run demo · MOCK`. Do not add `LLM_API_KEY` or `NEBIUS_API_KEY` to this service.
+
+To publish it, push this repository to GitHub, then in Render choose **New → Blueprint**, connect `justwshea/CrashCart`, select the branch containing this configuration, review the `crashcart-demo` service and its Free plan, and apply the Blueprint. When the deploy is ready, Render provides an `onrender.com` URL. Check `/healthz` returns `{"ok":true,"mode":"mock"}`, then open the root URL, select `xid79_demo`, run the demo, and confirm a diagnosis and report appear. Submit the public `onrender.com` URL as the working demo link; the GitHub URL is the source repository link.
+
+The free service can sleep after inactivity and take about a minute to wake. Its local filesystem is ephemeral, so uploaded bundles and run records are temporary. See [Render's free service limitations](https://render.com/docs/free). The mock deployment demonstrates the application flow; it does not measure live model quality, Token Factory latency, or cost.
 
 ## Limitations
 
